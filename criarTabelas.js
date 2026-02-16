@@ -49,4 +49,8 @@ async function createTables() {
   }
 }
 
-createTables();
+criarTabelas().then(() => {
+  app.listen(process.env.PORT || 3000, () => {
+    console.log("Servidor rodando...");
+  });
+});
