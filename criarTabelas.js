@@ -6,7 +6,7 @@ const client = new Client({
   ssl: { rejectUnauthorized: false },
 });
 
-async function createTables() {
+async function criarTabelas() {
   try {
     await client.connect();
     console.log("Conectado ao PostgreSQL no Render");
@@ -49,8 +49,4 @@ async function createTables() {
   }
 }
 
-criarTabelas().then(() => {
-  app.listen(process.env.PORT || 3000, () => {
-    console.log("Servidor rodando...");
-  });
-});
+criarTabelas();
