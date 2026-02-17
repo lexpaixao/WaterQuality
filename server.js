@@ -43,6 +43,25 @@ async function criarTabelas() {
         criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
+      // Tabela de histórico
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS historico (
+        id SERIAL PRIMARY KEY,
+        usuario_id INT REFERENCES usuarios(id) ON DELETE CASCADE,
+        usuario_nome VARCHAR(100) NOT NULL,
+        reservatorio VARCHAR(100) NOT NULL,
+        ph NUMERIC NOT NULL,
+        temperatura NUMERIC NOT NULL,
+        turbidez NUMERIC NOT NULL,
+        cloro NUMERIC NOT NULL,
+        od NUMERIC NOT NULL,
+        condutividade NUMERIC NOT NULL,
+        tds NUMERIC NOT NULL,
+        status_geral VARCHAR(100) NOT NULL,
+        indicadores_fora TEXT,
+        criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
 
     console.log("Tabelas criadas com sucesso!");
   } catch (err) {
@@ -202,6 +221,59 @@ app.post("/api/processar", async (req, res) => {
   } catch (err) {
     console.error("Erro ao processar:", err);
     res.status(500).json({ erro: "Erro interno do servidor" });
+  }
+});
+
+/ POST /api/historico -> salvar monitoramento
+app.post("/api/historico", async (req, res) => {
+  try {
+    const dados = req.body;
+
+    const query = `
+      INSERT INTO historico (
+        usuario_id, usuario_nome, reservatorio,
+        ph, temperatura, turbidez, cloro, od,
+        condutividade, tds, status_geral, indicadores_fora
+      )
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+      RETURNING *;
+    `;
+
+    const values = [
+      dados.usuario_id,
+      dados.usuario_nome,
+      dados.reservatorio,
+      dados.ph,
+      dados.temperatura,
+      dados.turbidez,
+      dados.cloro,
+      dados.od,
+      dados.condutividade,
+      dados.tds,
+      dados.status_geral,
+      dados.indicadores_fora
+    ];
+
+    const result = await client.query(query, values);
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error("Erro ao salvar histórico:", err);
+    res.status(500).json({ erro: "Erro ao salvar histórico" });
+  }
+});
+
+// GET /api/historico -> listar todos os monitoramentos
+app.get("/api/historico", async (req, res) => {
+  try {
+    const query = `
+      SELECT * FROM historico
+      ORDER BY criado_em DESC;
+    `;
+    const result = await client.query(query);
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Erro ao buscar histórico:", err);
+    res.status(500).json({ erro: "Erro ao buscar histórico" });
   }
 });
 
