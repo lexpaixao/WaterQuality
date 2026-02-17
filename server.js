@@ -26,23 +26,6 @@ async function criarTabelas() {
         criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
-
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS historico (
-        id SERIAL PRIMARY KEY,
-        usuario_id INT REFERENCES usuarios(id) ON DELETE CASCADE,
-        ph NUMERIC NOT NULL,
-        temperatura NUMERIC NOT NULL,
-        turbidez NUMERIC NOT NULL,
-        cloro NUMERIC NOT NULL,
-        od NUMERIC NOT NULL,
-        condutividade NUMERIC NOT NULL,
-        tds NUMERIC NOT NULL,
-        status_geral VARCHAR(100) NOT NULL,
-        indicadores_fora TEXT,
-        criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
       // Tabela de histórico
     await client.query(`
       CREATE TABLE IF NOT EXISTS historico (
@@ -147,7 +130,7 @@ app.post("/api/processar", async (req, res) => {
       tds
     } = req.body;
 
-    // 🔒 Validação básica
+    //  Validação básica
     if (
       ph == null ||
       turbidez == null ||
@@ -181,7 +164,7 @@ app.post("/api/processar", async (req, res) => {
       return res.status(400).json({ erro: "Valores inválidos" });
     }
 
-    // 📋 Array para armazenar inconformidades
+    //  Array para armazenar inconformidades
     const parametrosFora = [];
 
     if (!(phNum >= 6.5 && phNum <= 8.5))
@@ -205,14 +188,14 @@ app.post("/api/processar", async (req, res) => {
     if (!(tdsNum <= 500))
       parametrosFora.push("TDS fora do padrão (≤ 500 mg/L)");
 
-    // ✅ Se tudo estiver correto
+    //  Se tudo estiver correto
     if (parametrosFora.length === 0) {
       return res.json({
         status: "Dentro do padrão de potabilidade"
       });
     }
 
-    // ❌ Se houver inconformidades
+    //  Se houver inconformidades
     return res.json({
       status: "Fora do padrão de potabilidade",
       parametros_fora: parametrosFora
@@ -224,7 +207,7 @@ app.post("/api/processar", async (req, res) => {
   }
 });
 
-/ POST /api/historico -> salvar monitoramento
+// POST /api/historico -> salvar monitoramento
 app.post("/api/historico", async (req, res) => {
   try {
     const dados = req.body;
