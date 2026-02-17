@@ -86,6 +86,36 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
+app.post("/api/cadastro", async (req, res) => {
+  try {
+    const { nome_usuario, email, senha } = req.body;
+
+    if (!nome_usuario || !email || !senha) {
+      return res.status(400).json({ erro: "Preencha todos os campos." });
+    }
+
+    const check = await client.query(
+      "SELECT 1 FROM usuarios WHERE email = $1",
+      [email]
+    );
+
+    if (check.rows.length) {
+      return res.status(400).json({ erro: "Email já cadastrado." });
+    }
+
+    await client.query(
+      "INSERT INTO usuarios (nome_usuario, email, senha) VALUES ($1, $2, $3)",
+      [nome_usuario, email, senha]
+    );
+
+    res.status(201).json({ mensagem: "Usuário cadastrado com sucesso!" });
+
+  } catch (err) {
+    console.error("Erro no cadastro:", err);
+    res.status(500).json({ erro: "Erro interno do servidor" });
+  }
+});
+
 // Inicia o servidor e cria tabelas
 async function startServer() {
   try {
