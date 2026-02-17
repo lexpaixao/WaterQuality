@@ -46,6 +46,17 @@ async function criarTabelas() {
       );
     `);
 
+     // Adiciona colunas caso não existam (seguro)
+    await client.query(`
+      ALTER TABLE historico
+      ADD COLUMN IF NOT EXISTS usuario_nome VARCHAR(100);
+    `);
+
+    await client.query(`
+      ALTER TABLE historico
+      ADD COLUMN IF NOT EXISTS reservatorio VARCHAR(100);
+    `);
+
     console.log("Tabelas criadas com sucesso!");
   } catch (err) {
     console.error("Erro ao criar tabelas:", err);
