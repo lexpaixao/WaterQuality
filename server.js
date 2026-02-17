@@ -116,6 +116,95 @@ app.post("/api/cadastro", async (req, res) => {
   }
 });
 
+app.post("/api/processar", async (req, res) => {
+  try {
+    const {
+      ph,
+      turbidez,
+      temperatura,
+      cloro,
+      od,
+      condutividade,
+      tds
+    } = req.body;
+
+    // 🔒 Validação básica
+    if (
+      ph == null ||
+      turbidez == null ||
+      temperatura == null ||
+      cloro == null ||
+      od == null ||
+      condutividade == null ||
+      tds == null
+    ) {
+      return res.status(400).json({ erro: "Dados incompletos" });
+    }
+
+    // 🔢 Conversão para número
+    const phNum = Number(ph);
+    const turbidezNum = Number(turbidez);
+    const temperaturaNum = Number(temperatura);
+    const cloroNum = Number(cloro);
+    const odNum = Number(od);
+    const condutividadeNum = Number(condutividade);
+    const tdsNum = Number(tds);
+
+    if (
+      isNaN(phNum) ||
+      isNaN(turbidezNum) ||
+      isNaN(temperaturaNum) ||
+      isNaN(cloroNum) ||
+      isNaN(odNum) ||
+      isNaN(condutividadeNum) ||
+      isNaN(tdsNum)
+    ) {
+      return res.status(400).json({ erro: "Valores inválidos" });
+    }
+
+    // 📋 Array para armazenar inconformidades
+    const parametrosFora = [];
+
+    if (!(phNum >= 6.5 && phNum <= 8.5))
+      parametrosFora.push("pH fora do padrão (6.5 - 8.5)");
+
+    if (!(turbidezNum >= 1 && turbidezNum <= 5))
+      parametrosFora.push("Turbidez fora do padrão (1 - 5 NTU)");
+
+    if (!(temperaturaNum >= 5 && temperaturaNum <= 20))
+      parametrosFora.push("Temperatura fora do padrão (5 - 20 °C)");
+
+    if (!(cloroNum >= 0.2 && cloroNum <= 2.0))
+      parametrosFora.push("Cloro fora do padrão (0.2 - 2.0 mg/L)");
+
+    if (!(odNum >= 5))
+      parametrosFora.push("Oxigênio Dissolvido abaixo do mínimo (≥ 5 mg/L)");
+
+    if (!(condutividadeNum >= 50 && condutividadeNum <= 500))
+      parametrosFora.push("Condutividade fora do padrão (50 - 500 µS/cm)");
+
+    if (!(tdsNum <= 500))
+      parametrosFora.push("TDS fora do padrão (≤ 500 mg/L)");
+
+    // ✅ Se tudo estiver correto
+    if (parametrosFora.length === 0) {
+      return res.json({
+        status: "Dentro do padrão de potabilidade"
+      });
+    }
+
+    // ❌ Se houver inconformidades
+    return res.json({
+      status: "Fora do padrão de potabilidade",
+      parametros_fora: parametrosFora
+    });
+
+  } catch (err) {
+    console.error("Erro ao processar:", err);
+    res.status(500).json({ erro: "Erro interno do servidor" });
+  }
+});
+
 // Inicia o servidor e cria tabelas
 async function startServer() {
   try {
